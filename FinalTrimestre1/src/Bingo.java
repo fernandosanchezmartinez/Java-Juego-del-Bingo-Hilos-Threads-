@@ -1,4 +1,5 @@
 import java.util.HashSet;
+import java.util.Scanner;
 import java.util.Set;
 
 /**
@@ -9,17 +10,19 @@ import java.util.Set;
 /**
  * Clase que sirve para crear cada uno de los hilos de los jugadores
  */
-class Jugador {
+class Jugador extends Thread {
 	final int TOTAL_CARTON = 5; // Cantidad de números por cartón
 	final int TOTAL_BOMBO = 10; // Números posibles del bombo
 	int idJugador; // Identificador del jugador
-	Set<Integer> carton; // Para almacenar los números pendientes de acertar
+	HashSet<Integer> carton; // Para almacenar los números pendientes de acertar
+	Bombo b;
 
 	/**
 	 * @param identificador
 	 *            del jugador
 	 */
-	Jugador(int idJugador) {
+	Jugador(int idJugador, Bombo b) {
+		this.b = b;
 		this.idJugador = idJugador;
 		carton = new HashSet<Integer>();
 		while (carton.size() < TOTAL_CARTON)
@@ -39,10 +42,26 @@ class Jugador {
 	/**
 	 * Tacha el número del cartón en caso de que exista
 	 * 
-	 * @param numero a tachar
+	 * @param numero
+	 *            a tachar
 	 */
 	void tacharNum(Integer numero) {
 		carton.remove(numero);
+	}
+
+	public void run() {
+		while (carton.size() > 0) {
+
+			//imprimeCarton();
+			b.consultar();
+			System.out.println("El jugador  " + idJugador + "  va ha jugar ");
+			tacharNum(b.ultNumero);
+			System.out.println("El jugador  " + idJugador + "  ha jugado ");
+			imprimeCarton();
+
+		}
+		System.out.println("el jugador" + idJugador + "ha hecho BINGO");
+
 	}
 
 }
@@ -50,7 +69,33 @@ class Jugador {
 /**
  * Clase que sirve para el hilo del presentador
  */
-class Presentador {
+class Presentador extends Thread {
+	Bombo c;
+	Bingo bing;
+	int aux;
+
+	Presentador(Bombo c) {
+		this.c = c;
+
+	}
+
+	public void run() {
+		
+		if (c.numvecJugado >= bing.numjugadores) {
+			c.sacarNum();
+			c.numvecJugado = 0;
+		}else if (c.numvecJugado == 0){
+			c.sacarNum();
+		}
+		
+		//c.sacarNum();
+		/*while (c.numvecJugado >= 5) {
+			for (int i = 0; i < c.TOTAL_BOMBO; i++) {
+				c.sacarNum();
+				c.numvecJugado = 0;
+			}			
+		}*/		
+	}
 
 }
 
@@ -59,6 +104,9 @@ class Presentador {
  * del programa
  */
 class Bombo {
+	int numvecJugado = 0;
+	int hayBola = 0;
+	Jugador jug;
 	final int TOTAL_BOMBO = 10; // Números posibles del bombo
 	Set<Integer> bombo; // Para almacenar los valores que van saliendo
 	Integer ultNumero; // Último número del bombo
@@ -67,27 +115,64 @@ class Bombo {
 	 * Inicializa vacío el bombo
 	 */
 	Bombo() {
+
 		bombo = new HashSet<Integer>();
+
 	}
 
 	/**
 	 * @return El número que sale del bombo
 	 */
-	Integer sacarNum() {
-		Integer bolita=0;
+	synchronized void sacarNum() {
+		
+		while (hayBola != 0) {
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			// hasacadoBola++;
+		}
+
+		sacarNum2();
+		imprimirBombo();
+		hayBola++;
+		this.notifyAll();
+
+	}
+
+	Integer sacarNum2() {
+		Integer bolita = 0;
 		int cantidadBolas = bombo.size();
 		if (cantidadBolas < TOTAL_BOMBO) {
 			do {
 				ultNumero = (int) Math.floor(Math.random() * TOTAL_BOMBO) + 1;
 				bombo.add(ultNumero);
-				bolita=ultNumero;
+				bolita = ultNumero;
 			} while (cantidadBolas == bombo.size());
 			System.out.println("Ha salido el número: " + ultNumero);
 		} else
 			System.out.println("Ya han salido todas las bolas");
 		return bolita;
 	}
-	
+
+	synchronized void consultar() {
+		while (hayBola == 0) {
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		numvecJugado++;
+		hayBola--;
+		notifyAll();
+
+		//return ultNumero;
+
+	}
+
 	/**
 	 * Muestra todas las bolas que han salido hasta el momento
 	 */
@@ -104,7 +189,30 @@ class Bombo {
  * Clase principal desde la que se inicializa el juego del Bingo
  */
 public class Bingo {
+	static int numjugadores;
+	static Scanner in = new Scanner(System.in);
+
 	public static void main(String[] args) {
+		System.out.println("SE ABRE EL BINGO");
+		System.out.println("¿CUANTOS JUGADORES VAN A JUGAR?");
+		numjugadores = in.nextInt();
+		
+		Bombo bomb = new Bombo();
+		Thread jugador;
+		
+		
+
+		for (int i = 1; i <= numjugadores; i++) {
+			jugador = new Jugador(i, bomb);
+			System.out.println("el jugador" + i + "esta preparado");
+			jugador.start();
+		}
+		
+		Thread present = new Presentador(bomb);
+		present.start();
+		
+
+		
 
 	}
 }
