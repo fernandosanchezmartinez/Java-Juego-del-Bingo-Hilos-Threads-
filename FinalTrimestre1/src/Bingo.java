@@ -1,11 +1,12 @@
 import java.util.HashSet;
 import java.util.Scanner;
-import java.util.Set;
 
 /**
- * @author
+ * @author ------------------ FERNANDO SÁNCHEZ MARTÍNEZ    DAMP_2  -----------------------
  * @date 20/11/2015
  */
+
+//----------------------------------------------------------------------------------------------------//
 
 /**
  * Clase que sirve para crear cada uno de los hilos de los jugadores
@@ -27,7 +28,7 @@ class Jugador extends Thread {
 		carton = new HashSet<Integer>();
 		while (carton.size() < TOTAL_CARTON)
 			carton.add((int) Math.floor(Math.random() * TOTAL_BOMBO) + 1);
-		System.out.println("CARTON JUGADOR: "+idJugador +carton);
+		System.out.println("CARTON JUGADOR: " + idJugador + carton);
 	}
 
 	/**
@@ -50,23 +51,35 @@ class Jugador extends Thread {
 		carton.remove(numero);
 	}
 
+	/**
+	 * Método encargado de las acciones del jugador.
+	 */
 	public void run() {
-		while (carton.size() > 0) {
+		while (carton.size() > 0) {// mientras que el cartón no tenga tachados
+									// todos los números
 
 			// imprimeCarton();
-			b.consultar();
+			b.consultar();// se consulta
 			System.out.println("El jugador  " + idJugador + "  va ha jugar ");
-			tacharNum(b.ultNumero);
+			tacharNum(b.ultNumero);// se tacha el ultimo numero que ha salido
+			for (Integer integer : b.bombo) {// se comprueba que hayamos tachado
+												// todos los números que han
+												// salido, en su defecto se
+												// tachan.
+				carton.remove(integer);
+			}
+
 			System.out.println("El jugador  " + idJugador + "  ha jugado ");
 			imprimeCarton();
 
 		}
 		System.out.println("el jugador" + idJugador + "ha hecho BINGO");
 
-		
 	}
 
 }
+
+// ----------------------------------------------------------------------------------------------------//
 
 /**
  * Clase que sirve para el hilo del presentador
@@ -83,7 +96,7 @@ class Presentador extends Thread {
 
 	public void run() {
 		try {
-			
+
 			for (int i = 0; i < c.TOTAL_BOMBO; i++) {
 				Thread.sleep(2000);
 				c.sacarNum();
@@ -105,6 +118,8 @@ class Presentador extends Thread {
 
 }
 
+// ----------------------------------------------------------------------------------------------------//
+
 /**
  * Clase que se utiliza para crear el objeto compartido entre todos los hilos
  * del programa
@@ -113,10 +128,11 @@ class Bombo {
 	int numvecJugado = 0;
 	int hayBola = 0;
 	Jugador jug;
-	final int TOTAL_BOMBO = 5; // Números posibles del bombo
-	Set<Integer> bombo; // Para almacenar los valores que van saliendo
+	final int TOTAL_BOMBO = 10; // Números posibles del bombo
+	HashSet<Integer> bombo; // Para almacenar los valores que van saliendo
 	Integer ultNumero; // Último número del bombo
-	Bingo bing;
+
+	int aux = Bingo.numjugadores;
 
 	/**
 	 * Inicializa vacío el bombo
@@ -132,7 +148,7 @@ class Bombo {
 	 */
 	synchronized void sacarNum() {
 
-		while (hayBola != 0) {
+		while (hayBola != 0 /* && numvecJugado!= aux */) {
 			try {
 				this.wait();
 			} catch (InterruptedException e) {
@@ -143,6 +159,7 @@ class Bombo {
 		sacarNum2();
 		imprimirBombo();
 		hayBola++;
+		// hayBola=0;
 		notify();
 
 	}
@@ -163,7 +180,7 @@ class Bombo {
 	}
 
 	synchronized void consultar() {
-		while (hayBola == 0) {
+		while (hayBola == 0 /* && numvecJugado>= aux */) {
 			try {
 				this.wait();
 			} catch (InterruptedException e) {
@@ -187,6 +204,9 @@ class Bombo {
 	}
 
 }
+
+// ----------------------------------------------------------------------------------------------------//
+// ----------------------------------------------------------------------------------------------------//
 
 /**
  * Clase principal desde la que se inicializa el juego del Bingo
