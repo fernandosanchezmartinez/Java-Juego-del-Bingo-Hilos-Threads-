@@ -246,12 +246,12 @@ public class Bingo {
 		for (int i = 1; i <= numjugadores; i++) {
 			jugador = new Jugador(i, bomb);
 			System.out.println("el jugador" + i + "esta preparado");
-			jugador.start();
+			jugador.start();// SE LANZAN
 		}
 
-		// se crea el hilo presentador, el cuan cominza sacando un número
+		// se crea el hilo presentador, el cuaL cominza sacando un número
 		Thread present = new Presentador(bomb);
-		present.start();
+		present.start();// SE LANZAN
 
 	}
 }
