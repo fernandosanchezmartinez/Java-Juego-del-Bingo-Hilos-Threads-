@@ -70,10 +70,18 @@ class Jugador extends Thread {
 			}
 
 			System.out.println("El jugador  " + idJugador + "  ha jugado ");
-			imprimeCarton();
+			imprimeCarton();// SE IMPRIMEN LOS numeros PENDIENTES DE DICHO JUGADOR
 
 		}
-		System.out.println("el jugador" + idJugador + "ha hecho BINGO");
+		System.out.println("el jugador " + idJugador + " ha hecho BINGO! <---------------BINGO--------------->");
+		// si hace bingo termina la ejecucion del programa
+		try {
+			finalize();
+			System.exit(0);
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -87,17 +95,20 @@ class Jugador extends Thread {
 class Presentador extends Thread {
 	Bombo c;
 	// Bingo bing;
-	int aux;
+	//int aux;
 
 	Presentador(Bombo c) {
 		this.c = c;
 
 	}
 
+	/**
+	 * El presentador saca un número cada 2 segundos
+	 */
 	public void run() {
 		try {
 
-			for (int i = 0; i < c.TOTAL_BOMBO; i++) {
+			for (int i = 0; i < c.TOTAL_BOMBO; i++) {// va sacando numeros hasta llegar al total
 				Thread.sleep(2000);
 				c.sacarNum();
 			}
@@ -125,8 +136,8 @@ class Presentador extends Thread {
  * del programa
  */
 class Bombo {
-	int numvecJugado = 0;
-	int hayBola = 0;
+	int numvecJugado = 0;//numero de veces que se consulto
+	int hayBola = 0;// indica si se ha repartido
 	Jugador jug;
 	final int TOTAL_BOMBO = 10; // Números posibles del bombo
 	HashSet<Integer> bombo; // Para almacenar los valores que van saliendo
@@ -144,7 +155,7 @@ class Bombo {
 	}
 
 	/**
-	 * @return El número que sale del bombo
+	 * método sincronizado que comprueba si se ha sacado bola
 	 */
 	synchronized void sacarNum() {
 
@@ -164,6 +175,10 @@ class Bombo {
 
 	}
 
+	/**
+	 * Metodo encargado de sacar una bola, es llamado en sacarNum
+	 * @return
+	 */
 	Integer sacarNum2() {
 		Integer bolita = 0;
 		int cantidadBolas = bombo.size();
@@ -179,8 +194,11 @@ class Bombo {
 		return bolita;
 	}
 
+	/**
+	 * metodo sincronizado accedido por los jugadores
+	 */
 	synchronized void consultar() {
-		while (hayBola == 0 /* && numvecJugado>= aux */) {
+		while (hayBola == 0 /* && numvecJugado>= aux */) {// si no se ha repartido, espera
 			try {
 				this.wait();
 			} catch (InterruptedException e) {
@@ -216,19 +234,22 @@ public class Bingo {
 	static Scanner in = new Scanner(System.in);
 
 	public static void main(String[] args) {
+		// se pregunta por teclado cuantos jugadores van a jugar
 		System.out.println("SE ABRE EL BINGO");
 		System.out.println("¿CUANTOS JUGADORES VAN A JUGAR?");
 		numjugadores = in.nextInt();
 
-		Bombo bomb = new Bombo();
+		Bombo bomb = new Bombo();// se crea el bombo, llenandose el mismo
 		Thread jugador;
 
+		// se crean los huilos jugadores
 		for (int i = 1; i <= numjugadores; i++) {
 			jugador = new Jugador(i, bomb);
 			System.out.println("el jugador" + i + "esta preparado");
 			jugador.start();
 		}
 
+		// se crea el hilo presentador, el cuan cominza sacando un número
 		Thread present = new Presentador(bomb);
 		present.start();
 
